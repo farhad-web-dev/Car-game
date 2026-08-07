@@ -3,161 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Cyber Car PRO MAX</title>
+    <title>Car Runner PRO MAX</title>
     <style>
         body {
             margin: 0;
-            padding: 0;
-            background-color: #0b0b1a;
-            color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
+            background: #111;
+            color: #fff;
+            font-family: Arial, sans-serif;
             text-align: center;
-            user-select: none;
-            -webkit-user-select: none;
+            overflow: hidden;
         }
-        #gameCanvas {
+        canvas {
+            background: #222;
             display: block;
-            background: #0b0b1a;
-            margin: 0 auto;
+            margin: 20px auto;
+            border: 4px solid #444;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
         }
-        #lobbyScreen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #0b0b1a;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-            padding: 20px;
-            box-sizing: border-box;
+        #ui {
+            margin-top: 10px;
         }
-        h1 {
-            color: #00ffcc;
-            text-shadow: 0 0 15px rgba(0, 255, 204, 0.5);
-            font-size: 26px;
-            margin-bottom: 5px;
-        }
-        .stats {
-            color: #a0a0c0;
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
-        #startBtn {
-            background: #ff007f;
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #ff4757;
             color: white;
             border: none;
-            padding: 15px 40px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 30px;
+            border-radius: 5px;
             cursor: pointer;
-            box-shadow: 0 0 20px rgba(255, 0, 127, 0.6);
-            margin-bottom: 25px;
-            transition: 0.2s;
+            margin: 5px;
         }
-        #startBtn:active {
-            transform: scale(0.95);
-        }
-        #garageGrid {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-            max-width: 400px;
-        }
-        .car-card {
-            background: #161633;
-            border: 2px solid #2a2a50;
-            border-radius: 10px;
-            padding: 10px;
-            width: 90px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .car-card.selected {
-            border-color: #00ffcc;
-            box-shadow: 0 0 10px rgba(0, 255, 204, 0.4);
-        }
-        .hud {
-            position: absolute;
-            top: 10px;
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: space-around;
-            font-size: 14px;
-            font-weight: bold;
-            color: #00ffcc;
-            pointer-events: none;
-            z-index: 5;
-        }
-        .controls {
-            position: absolute;
-            bottom: 20px;
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            padding: 0 20px;
-            box-sizing: border-box;
-            z-index: 5;
-        }
-        .control-btn {
-            background: rgba(22, 22, 51, 0.8);
-            color: #a0a0c0;
-            border: 2px solid #2a2a50;
-            width: 100px;
-            height: 60px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            touch-action: manipulation;
-        }
-        #msgBox {
-            color: #ff0055;
-            font-size: 12px;
-            height: 15px;
-            margin-top: 10px;
+        button:hover {
+            background: #ff6b81;
         }
     </style>
 </head>
 <body>
 
-    <!-- HUD -->
-    <div class="hud">
-        <div>Score: <span id="scoreVal">0</span></div>
-        <div>High: <span id="highScoreVal">0</span></div>
-        <div>Coins: <span id="coinVal">0</span></div>
+    <h1>Car Runner PRO MAX 🚗💨</h1>
+    <div id="ui">
+        <p id="user-status">Not Logged In</p>
+        <button id="login-btn" onclick="loginWithGoogle()">Google Login</button>
     </div>
 
-    <!-- Canvas -->
-    <canvas id="gameCanvas"></canvas>
+    <canvas id="gameCanvas" width="400" height="600"></canvas>
 
-    <!-- Controls -->
-    <div class="controls">
-        <button id="leftBtn" class="control-btn">◀ LEFT</button>
-        <button id="rightBtn" class="control-btn">RIGHT ▶</button>
-    </div>
+    <!-- Firebase App (Core SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <!-- Firebase Authentication -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <!-- Firebase Firestore -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
-    <!-- Lobby Screen -->
-    <div id="lobbyScreen">
-        <h1>🚗 GARAGE LOBBY</h1>
-        <div class="stats">Total Coins: <span id="lobbyCoins">0</span> | High Score: <span id="lobbyHighScore">0</span></div>
-        
-        <button id="startBtn">START GAME</button>
-        
-        <div id="garageGrid"></div>
-        <div id="msgBox"></div>
-    </div>
+    <script>
+        // --- FIREBASE CONFIGURATION ---
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
 
-    <script src="game.js"></script>
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Google Login Function
+        function loginWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+            .then((result) => {
+                console.log("Logged in as:", result.user.displayName);
+            })
+            .catch((error) => {
+                console.error("Login Error:", error);
+            });
+        }
+
+        // Track Auth State
+        auth.onAuthStateChanged((user) => {
+            const statusText = document.getElementById("user-status");
+            const loginBtn = document.getElementById("login-btn");
+            if (user) {
+                statusText.innerText = `Welcome, ${user.displayName}`;
+                loginBtn.style.display = "none";
+            } else {
+                statusText.innerText = "Not Logged In";
+                loginBtn.style.display = "inline-block";
+            }
+        });
+
+        // --- GAME LOGIC ---
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let car = { x: 175, y: 480, width: 50, height: 90, speed: 5 };
+        let obstacles = [];
+        let score = 0;
+        let isGameOver = false;
+
+        let keys = {};
+        window.addEventListener("keydown", (e) => keys[e.key] = true);
+        window.addEventListener("keyup", (e) => keys[e.key] = false);
+
+        function spawnObstacle() {
+            if (Math.random() < 0.02) {
+                let lanes = [50, 150, 250, 300];
+                let posX = lanes[Math.floor(Math.random() * lanes.length)];
+                obstacles.push({ x: posX, y: -100, width: 50, height: 90, speed: 4 });
+            }
+        }
+
+        function update() {
+            if (isGameOver) return;
+
+            // Car Movement
+            if ((keys["ArrowLeft"] || keys["a"]) && car.x > 30) car.x -= car.speed;
+            if ((keys["ArrowRight"] || keys["d"]) && car.x < canvas.width - 80) car.x += car.speed;
+
+            spawnObstacle();
+
+            // Obstacles Update
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                obstacles[i].y += obstacles[i].speed;
+
+                // Collision Detection
+                if (
+                    car.x < obstacles[i].x + obstacles[i].width &&
+                    car.x + car.width > obstacles[i].x &&
+                    car.y < obstacles[i].y + obstacles[i].height &&
+                    car.y + car.height > obstacles[i].y
+                ) {
+                    isGameOver = true;
+                }
+
+                // Remove out of screen
+                if (obstacles[i].y > canvas.height) {
+                    obstacles.splice(i, 1);
+                    score += 10;
+                }
+            }
+        }
+
+        function draw() {
+            // Clear Screen
+            ctx.fillStyle = "#222";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Road Lines
+            ctx.strokeStyle = "#fff";
+            ctx.setLineDash([20, 20]);
+            ctx.beginPath();
+            ctx.moveTo(133, 0); ctx.lineTo(133, canvas.height);
+            ctx.moveTo(266, 0); ctx.lineTo(266, canvas.height);
+            ctx.stroke();
+
+            // Draw Player Car
+            ctx.fillStyle = "#ff4757";
+            ctx.fillRect(car.x, car.y, car.width, car.height);
+
+            // Draw Obstacles
+            ctx.fillStyle = "#2ed573";
+            for (let obs of obstacles) {
+                ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+            }
+
+            // Draw Score
+            ctx.fillStyle = "#fff";
+            ctx.font = "20px Arial";
+            ctx.fillText(`Score: ${score}`, 20, 30);
+
+            if (isGameOver) {
+                ctx.fillStyle = "rgba(0,0,0,0.7)";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = "#fff";
+                ctx.font = "30px Arial";
+                ctx.fillText("GAME OVER", 100, 280);
+                ctx.font = "16px Arial";
+                ctx.fillText("Refresh to Restart", 130, 320);
+            }
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+    </script>
 </body>
 </html>
