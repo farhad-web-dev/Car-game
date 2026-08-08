@@ -7,55 +7,84 @@
     <style>
         body {
             margin: 0;
+            padding: 0;
             background: #111;
             color: #fff;
             font-family: Arial, sans-serif;
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
             overflow: hidden;
         }
         canvas {
             background: #222;
-            display: block;
-            margin: 20px auto;
-            border: 4px solid #444;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            border: 4px solid #ff4757;
+            box-shadow: 0 0 20px rgba(255, 71, 87, 0.5);
         }
         #ui {
             margin-top: 10px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background: #ff4757;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 5px;
-        }
-        button:hover {
-            background: #ff6b81;
+            font-size: 20px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-    <h1>Car Runner PRO MAX 🚗💨</h1>
-    <div id="ui">
-        <p id="user-status">Not Logged In</p>
-        <button id="login-btn" onclick="loginWithGoogle()">Google Login</button>
-    </div>
-
+    <div id="ui">Score: <span id="score">0</span></div>
     <canvas id="gameCanvas" width="400" height="600"></canvas>
 
-    <!-- Firebase App (Core SDK) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <!-- Firebase Authentication -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <!-- Firebase Firestore -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <!-- Firebase SDK aur Setup -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-analytics.js";
 
-    <!-- Game Script -->
-    <script src="game.js"></script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBNgvXiRusRr9gdlyvws1vdb-nI9femsNg",
+            authDomain: "car-game-121f0.firebaseapp.com",
+            projectId: "car-game-121f0",
+            storageBucket: "car-game-121f0.firebasestorage.app",
+            messagingSenderId: "143804800312",
+            appId: "1:143804800312:web:1db7245c0bdecf8b8af5cd",
+            measurementId: "G-49TLFJ5XSC"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        console.log("Firebase connected successfully!");
+    </script>
+
+    <!-- Game Logic Script -->
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreElement = document.getElementById("score");
+
+        let score = 0;
+        let carY = 500;
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Simple moving car placeholder
+            ctx.fillStyle = "#ff4757";
+            ctx.fillRect(180, carY, 40, 70);
+
+            score++;
+            scoreElement.innerText = score;
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Tap to move car slightly
+        window.addEventListener("click", () => {
+            carY -= 20;
+            if (carY < 400) carY = 500;
+        });
+
+        gameLoop();
+    </script>
 </body>
 </html>
