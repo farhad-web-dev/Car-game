@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Car Runner PRO MAX</title>
+    <title>Car Runner PRO MAX with Firestore</title>
     <style>
         body {
             margin: 0;
@@ -35,10 +35,11 @@
     <div id="ui">Score: <span id="score">0</span></div>
     <canvas id="gameCanvas" width="400" height="600"></canvas>
 
-    <!-- Firebase SDK aur Setup -->
+    <!-- Firebase & Firestore SDK aur Setup -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-analytics.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBNgvXiRusRr9gdlyvws1vdb-nI9femsNg",
@@ -53,7 +54,22 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const analytics = getAnalytics(app);
-        console.log("Firebase connected successfully!");
+        const db = getFirestore(app);
+        console.log("Firebase and Firestore connected successfully!");
+
+        // Global scope mein saveScore function daal rahe hain taaki game loop se call ho sake
+        window.saveScoreToFirebase = async function(playerName, finalScore) {
+            try {
+                await addDoc(collection(db, "highscores"), {
+                    name: playerName,
+                    score: finalScore,
+                    timestamp: new Date()
+                });
+                console.log("Score saved to Firestore!");
+            } catch (e) {
+                console.error("Error adding score: ", e);
+            }
+        };
     </script>
 
     <!-- Game Logic Script -->
@@ -64,8 +80,11 @@
 
         let score = 0;
         let carY = 500;
+        let isGameOver = false;
 
         function gameLoop() {
+            if (isGameOver) return;
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             // Simple moving car placeholder
@@ -75,13 +94,24 @@
             score++;
             scoreElement.innerText = score;
 
-            requestAnimationFrame(gameLoop);
+            // Sample condition: agar score 500 ho jaye toh game over karke score save kar do
+            if (score === 500) {
+                isGameOver = true;
+                alert("Game Over! Score: " + score);
+                if (window.saveScoreToFirebase) {
+                    window.saveScoreToFirebase("Farhad", score);
+                }
+            } else {
+                requestAnimationFrame(gameLoop);
+            }
         }
 
         // Tap to move car slightly
         window.addEventListener("click", () => {
-            carY -= 20;
-            if (carY < 400) carY = 500;
+            if (!isGameOver) {
+                carY -= 20;
+                if (carY < 400) carY = 500;
+            }
         });
 
         gameLoop();
