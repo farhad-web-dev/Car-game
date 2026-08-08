@@ -2,40 +2,179 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Car Runner PRO MAX with Firestore</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Cyber Car PRO MAX</title>
     <style>
         body {
             margin: 0;
-            padding: 0;
-            background: #111;
+            background: #0b0b1a;
             color: #fff;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            touch-action: none;
+        }
+        h2 {
+            margin: 6px 0 2px 0;
+            color: #00ffcc;
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+            font-size: 15px;
+        }
+        .score-board {
+            font-size: 13px;
+            margin-bottom: 4px;
+            letter-spacing: 0.5px;
+        }
+        canvas {
+            border-top: 3px solid #ff007f;
+            border-bottom: 3px solid #ff007f;
+            box-shadow: 0 0 20px rgba(255, 0, 127, 0.4);
+            background: #11112b;
+            flex-grow: 1;
+            width: 100%;
+        }
+        .controls-container {
+            display: flex;
+            gap: 15px;
+            padding: 10px;
+            width: 100%;
+            max-width: 450px;
+            box-sizing: border-box;
+            background: #0b0b1a;
+        }
+        .ctrl-btn {
+            flex: 1;
+            background: rgba(0, 255, 204, 0.15);
+            border: 2px solid #00ffcc;
+            color: #00ffcc;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 14px 0;
+            border-radius: 12px;
+            text-align: center;
+            user-select: none;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+        }
+        .ctrl-btn:active {
+            background: rgba(0, 255, 204, 0.4);
+            transform: scale(0.96);
+        }
+        #lobbyScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(11, 11, 26, 0.95);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            overflow: hidden;
+            z-index: 10;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
-        canvas {
-            background: #222;
-            border: 4px solid #ff4757;
-            box-shadow: 0 0 20px rgba(255, 71, 87, 0.5);
+        .lobby-title {
+            font-size: 24px;
+            color: #00ffcc;
+            text-shadow: 0 0 15px #00ffcc;
+            margin-bottom: 5px;
         }
-        #ui {
-            margin-top: 10px;
-            font-size: 20px;
+        .total-coins {
+            font-size: 15px;
+            color: #ffd700;
+            margin-bottom: 5px;
+        }
+        .high-score-lobby {
+            font-size: 14px;
+            color: #00ffcc;
+            margin-bottom: 15px;
+        }
+        .msg-box {
+            font-size: 13px;
+            color: #ff3366;
+            height: 20px;
+            margin-bottom: 10px;
             font-weight: bold;
+        }
+        .garage-grid {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .car-card {
+            background: #161633;
+            border: 2px solid #333;
+            border-radius: 12px;
+            padding: 12px;
+            width: 100px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .car-card.selected {
+            border-color: #00ffcc;
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.5);
+        }
+        .car-card.unlocked {
+            border-color: #ff007f;
+        }
+        .car-preview {
+            width: 35px;
+            height: 55px;
+            margin: 0 auto 8px auto;
+            border-radius: 4px;
+        }
+        .start-btn {
+            background: #ff007f;
+            color: #fff;
+            border: none;
+            padding: 14px 35px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.6);
+            letter-spacing: 1px;
+        }
+        .start-btn:active {
+            transform: scale(0.95);
         }
     </style>
 </head>
 <body>
 
-    <div id="ui">Score: <span id="score">0</span></div>
-    <canvas id="gameCanvas" width="400" height="600"></canvas>
+    <!-- LOBBY / GARAGE SCREEN -->
+    <div id="lobbyScreen">
+        <div class="lobby-title">🚗 GARAGE LOBBY</div>
+        <div class="total-coins">Total Coins: <span id="lobbyCoins">0</span> 🪙</div>
+        <div class="high-score-lobby">🏆 High Score: <span id="lobbyHighScore">0</span></div>
+        <div class="msg-box" id="msgBox"></div>
+        
+        <div class="garage-grid" id="garageGrid"></div>
 
-    <!-- Firebase & Firestore SDK aur Setup -->
+        <button class="start-btn" id="startBtn">START GAME</button>
+    </div>
+
+    <h2>🚗 Neon Cyber Car PRO MAX</h2>
+    <div class="score-board">Score: <span id="scoreVal">0</span> | High: <span id="highScoreVal">0</span> | Coins: <span id="coinVal">0</span></div>
+    
+    <canvas id="gameCanvas"></canvas>
+
+    <div class="controls-container">
+        <div class="ctrl-btn" id="leftBtn">◀ LEFT</div>
+        <div class="ctrl-btn" id="rightBtn">RIGHT ▶</div>
+    </div>
+
+    <!-- FIREBASE & FIRESTORE MODULE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-analytics.js";
@@ -51,13 +190,11 @@
             measurementId: "G-49TLFJ5XSC"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const analytics = getAnalytics(app);
         const db = getFirestore(app);
-        console.log("Firebase and Firestore connected successfully!");
 
-        // Global scope mein saveScore function daal rahe hain taaki game loop se call ho sake
+        // Global function to save score to Firebase Firestore
         window.saveScoreToFirebase = async function(playerName, finalScore) {
             try {
                 await addDoc(collection(db, "highscores"), {
@@ -65,56 +202,335 @@
                     score: finalScore,
                     timestamp: new Date()
                 });
-                console.log("Score saved to Firestore!");
+                console.log("Score saved to Firebase successfully!");
             } catch (e) {
-                console.error("Error adding score: ", e);
+                console.error("Error saving score: ", e);
             }
         };
     </script>
 
-    <!-- Game Logic Script -->
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
-        const scoreElement = document.getElementById("score");
 
-        let score = 0;
-        let carY = 500;
-        let isGameOver = false;
+        let totalCoins = parseInt(localStorage.getItem("cyber_coins")) || 0;
+        let highScore = parseInt(localStorage.getItem("cyber_highscore")) || 0;
+        let selectedCarIndex = parseInt(localStorage.getItem("cyber_selected_car")) || 0;
+        let unlockedCars = JSON.parse(localStorage.getItem("cyber_unlocked")) || [true, false, false];
 
-        function gameLoop() {
-            if (isGameOver) return;
+        const carsConfig = [
+            { name: "Cyan Cyber", color: "#00ffcc", price: 0 },
+            { name: "Neon Flame", color: "#ff3300", price: 3 },
+            { name: "Royal Gold", color: "#ffd700", price: 5 }
+        ];
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Simple moving car placeholder
-            ctx.fillStyle = "#ff4757";
-            ctx.fillRect(180, carY, 40, 70);
-
-            score++;
-            scoreElement.innerText = score;
-
-            // Sample condition: agar score 500 ho jaye toh game over karke score save kar do
-            if (score === 500) {
-                isGameOver = true;
-                alert("Game Over! Score: " + score);
-                if (window.saveScoreToFirebase) {
-                    window.saveScoreToFirebase("Farhad", score);
-                }
-            } else {
-                requestAnimationFrame(gameLoop);
+        let audioCtx = null;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
         }
 
-        // Tap to move car slightly
-        window.addEventListener("click", () => {
-            if (!isGameOver) {
-                carY -= 20;
-                if (carY < 400) carY = 500;
-            }
+        function playSound(type) {
+            if (!audioCtx) return;
+            try {
+                let osc = audioCtx.createOscillator();
+                let gainNode = audioCtx.createGain();
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                let now = audioCtx.currentTime;
+
+                if (type === 'coin') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, now);
+                    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.15);
+                    gainNode.gain.setValueAtTime(0.15, now);
+                    gainNode.gain.linearRampToValueAtTime(0, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'crash') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.linearRampToValueAtTime(40, now + 0.4);
+                    gainNode.gain.setValueAtTime(0.3, now);
+                    gainNode.gain.linearRampToValueAtTime(0, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'buy') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.setValueAtTime(800, now + 0.1);
+                    gainNode.gain.setValueAtTime(0.2, now);
+                    gainNode.gain.linearRampToValueAtTime(0, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                }
+            } catch(e) {}
+        }
+
+        function updateLobbyUI() {
+            document.getElementById("lobbyCoins").innerText = totalCoins;
+            document.getElementById("lobbyHighScore").innerText = highScore;
+            const grid = document.getElementById("garageGrid");
+            grid.innerHTML = "";
+
+            carsConfig.forEach((car, index) => {
+                let card = document.createElement("div");
+                let isUnlocked = unlockedCars[index];
+                let isSelected = (selectedCarIndex === index);
+
+                card.className = `car-card ${isSelected ? 'selected' : ''} ${isUnlocked ? 'unlocked' : ''}`;
+                
+                card.innerHTML = `
+                    <div class="car-preview" style="background: ${car.color}; box-shadow: 0 0 10px ${car.color};"></div>
+                    <div style="font-size:11px; font-weight:bold; margin-bottom:4px;">${car.name}</div>
+                    <div style="font-size:11px; color:${isUnlocked ? '#00ffcc' : '#ffd700'};">
+                        ${isUnlocked ? (isSelected ? 'SELECTED' : 'SELECT') : '🔒 ' + car.price}
+                    </div>
+                `;
+
+                card.addEventListener("click", () => {
+                    initAudio();
+                    let msgBox = document.getElementById("msgBox");
+                    if (isUnlocked) {
+                        selectedCarIndex = index;
+                        localStorage.setItem("cyber_selected_car", selectedCarIndex);
+                        msgBox.innerText = "";
+                        updateLobbyUI();
+                    } else {
+                        if (totalCoins >= car.price) {
+                            totalCoins -= car.price;
+                            unlockedCars[index] = true;
+                            selectedCarIndex = index;
+                            localStorage.setItem("cyber_coins", totalCoins);
+                            localStorage.setItem("cyber_unlocked", JSON.stringify(unlockedCars));
+                            localStorage.setItem("cyber_selected_car", selectedCarIndex);
+                            playSound('buy');
+                            msgBox.innerText = "";
+                            updateLobbyUI();
+                        } else {
+                            msgBox.innerText = "Not enough coins! Collect more in game.";
+                        }
+                    }
+                });
+                grid.appendChild(card);
+            });
+        }
+        updateLobbyUI();
+
+        document.getElementById("startBtn").addEventListener("click", () => {
+            initAudio();
+            document.getElementById("lobbyScreen").style.display = "none";
+            resetGame();
+            loop();
         });
 
-        gameLoop();
-    </script>
-</body>
-</html>
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight - 125;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const scoreVal = document.getElementById("scoreVal");
+        const highScoreVal = document.getElementById("highScoreVal");
+        const coinVal = document.getElementById("coinVal");
+        highScoreVal.innerText = highScore;
+
+        let score = 0;
+        let sessionCoins = 0;
+        let isGameOver = false;
+        let gameRunning = false;
+
+        let player = {
+            x: canvas.width / 2 - 18,
+            y: canvas.height - 70,
+            width: 36,
+            height: 58,
+            currentSpeed: 7
+        };
+
+        let obstacles = [];
+        let coins = [];
+        let frameCount = 0;
+
+        let leftPressed = false;
+        let rightPressed = false;
+
+        function resetGame() {
+            score = 0;
+            sessionCoins = 0;
+            isGameOver = false;
+            gameRunning = true;
+            obstacles = [];
+            coins = [];
+            frameCount = 0;
+            player.x = canvas.width / 2 - 18;
+            player.y = canvas.height - 70;
+            scoreVal.innerText = score;
+            coinVal.innerText = sessionCoins;
+        }
+
+        function goToLobby() {
+            document.getElementById("lobbyScreen").style.display = "flex";
+            updateLobbyUI();
+        }
+
+        window.addEventListener("keydown", (e) => {
+            initAudio();
+            if (e.key === "ArrowLeft" || e.key === "a") leftPressed = true;
+            if (e.key === "ArrowRight" || e.key === "d") rightPressed = true;
+            if (e.key === " " && isGameOver) goToLobby();
+        });
+
+        window.addEventListener("keyup", (e) => {
+            if (e.key === "ArrowLeft" || e.key === "a") leftPressed = false;
+            if (e.key === "ArrowRight" || e.key === "d") rightPressed = false;
+        });
+
+        const leftBtn = document.getElementById("leftBtn");
+        const rightBtn = document.getElementById("rightBtn");
+
+        leftBtn.addEventListener("touchstart", (e) => { e.preventDefault(); initAudio(); leftPressed = true; });
+        leftBtn.addEventListener("touchend", (e) => { e.preventDefault(); leftPressed = false; });
+        leftBtn.addEventListener("mousedown", () => { initAudio(); leftPressed = true; });
+        leftBtn.addEventListener("mouseup", () => { leftPressed = false; });
+        leftBtn.addEventListener("mouseleave", () => { leftPressed = false; });
+
+        rightBtn.addEventListener("touchstart", (e) => { e.preventDefault(); initAudio(); rightPressed = true; });
+        rightBtn.addEventListener("touchend", (e) => { e.preventDefault(); rightPressed = false; });
+        rightBtn.addEventListener("mousedown", () => { initAudio(); rightPressed = true; });
+        rightBtn.addEventListener("mouseup", () => { rightPressed = false; });
+        rightBtn.addEventListener("mouseleave", () => { rightPressed = false; });
+
+        canvas.addEventListener("click", () => { initAudio(); if (isGameOver) goToLobby(); });
+        canvas.addEventListener("touchstart", () => { initAudio(); if (isGameOver) goToLobby(); });
+
+        function spawnEntity() {
+            let width = 36;
+            let height = 58;
+            let x = Math.random() * (canvas.width - width - 20) + 10;
+            let fixedSpeed = 5;
+
+            if (Math.random() < 0.75) {
+                obstacles.push({ x: x, y: -90, width: width, height: height, speed: fixedSpeed });
+            } else {
+                coins.push({ x: x + 6, y: -90, radius: 12, speed: fixedSpeed });
+            }
+        }
+
+        function update() {
+            if (isGameOver || !gameRunning) return;
+
+            if (leftPressed) player.x -= player.currentSpeed;
+            if (rightPressed) player.x += player.currentSpeed;
+
+            if (player.x < 5) player.x = 5;
+            if (player.x + player.width > canvas.width - 5) player.x = canvas.width - player.width - 5;
+
+            frameCount++;
+            if (frameCount % 50 === 0) {
+                spawnEntity();
+            }
+
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                obstacles[i].y += obstacles[i].speed;
+
+                if (
+                    player.x < obstacles[i].x + obstacles[i].width &&
+                    player.x + player.width > obstacles[i].x &&
+                    player.y < obstacles[i].y + obstacles[i].height &&
+                    player.y + player.height > obstacles[i].y
+                ) {
+                    isGameOver = true;
+                    gameRunning = false;
+                    playSound('crash');
+                    totalCoins += sessionCoins;
+                    localStorage.setItem("cyber_coins", totalCoins);
+
+                    if (score > highScore) {
+                        highScore = score;
+                        localStorage.setItem("cyber_highscore", highScore);
+                    }
+
+                    // Save score to Firebase when game ends
+                    if (window.saveScoreToFirebase) {
+                        window.saveScoreToFirebase("Farhad", score);
+                    }
+                }
+
+                if (obstacles[i].y > canvas.height) {
+                    obstacles.splice(i, 1);
+                    score += 10;
+                }
+            }
+
+            for (let i = coins.length - 1; i >= 0; i--) {
+                coins[i].y += coins[i].speed;
+
+                let dx = (player.x + player.width / 2) - coins[i].x;
+                let dy = (player.y + player.height / 2) - coins[i].y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < player.width / 2 + coins[i].radius) {
+                    sessionCoins += 1;
+                    playSound('coin');
+                    coins.splice(i, 1);
+                } else if (coins[i].y > canvas.height) {
+                    coins.splice(i, 1);
+                }
+            }
+
+            scoreVal.innerText = score;
+            highScoreVal.innerText = highScore;
+            coinVal.innerText = sessionCoins;
+        }
+
+        function drawPlayerCar(x, y, w, h, primaryColor) {
+            ctx.save();
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = primaryColor;
+            
+            ctx.fillStyle = primaryColor;
+            ctx.fillRect(x + 4, y + 10, w - 8, h - 20);
+            ctx.fillRect(x, y + 15, w, h - 30);
+
+            ctx.fillStyle = "#0b0b1a";
+            ctx.fillRect(x + 6, y + 14, w - 12, 12);
+            ctx.fillRect(x + 8, y + 32, w - 16, 10);
+
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(x + 3, y + 2, 6, 4);
+            ctx.fillRect(x + w - 9, y + 2, 6, 4);
+
+            ctx.fillStyle = "#ff007f";
+            ctx.fillRect(x - 3, y + 10, 4, 12);
+            ctx.fillRect(x + w - 1, y + 10, 4, 12);
+            ctx.fillRect(x - 3, y + h - 22, 4, 12);
+            ctx.fillRect(x + w - 1, y + h - 22, 4, 12);
+
+            ctx.restore();
+        }
+
+        function drawEnemyCar(x, y, w, h) {
+            ctx.save();
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = "#ff007f";
+            ctx.fillStyle = "#ff007f";
+            ctx.fillRect(x + 4, y + 10, w - 8, h - 20);
+            ctx.fillRect(x, y + 15, w, h - 30);
+            ctx.fillStyle = "#0b0b1a";
+            ctx.fillRect(x + 6, y + 14, w - 12, 12);
+            ctx.fillRect(x + 8, y + 32, w - 16, 10);
+            ctx.fillStyle = "#ffff00";
+            ctx.fillRect(x + 3, y + h - 6, 6, 4);
+            ctx.fillRect(x + w - 9, y + h - 6, 6, 4);
+            ctx.fillStyle = "#00ffcc";
+            ctx.fillRect(x - 3, y + 10, 4, 12);
+            ctx.fillRect(x + w - 1, y + 10, 4, 12);
+            ctx.fillRect(x - 3, y + h - 22, 4, 12);
+            ctx.fillRect(x + w - 1, y + h - 22, 4, 12);
+            ctx.restore();
+        }
+
+        function drawCoin(x, y, radi
